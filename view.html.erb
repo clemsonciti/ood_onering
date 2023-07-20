@@ -1,11 +1,25 @@
 <%-
+  require 'digest'
 
+  # Generate form id, based on host and port
+  form_id = Digest::SHA1.hexdigest("--" + host.to_s + "--" + port.to_s + "--")
+
+  # Generate SHA256 digest of Code Server Password
+  cookieValue = Digest::SHA256.hexdigest(password)
+  
   if app_type.to_s == "jupyter"
     base_url  = "/node/#{host}/#{port}"
     login_url = "#{base_url}/login"
     next_url  = "#{base_url}/#{jupyter_api}"
     full_url="#{login_url}?next=#{CGI.escape(next_url)}"
     form_id = "jupyter_form#{login_url.gsub('/', '_')}"
+  elsif app_type.to_s == "vscode"
+    base_url  = "/rnode/#{host}/#{port}"
+    full_url = "#{base_url}/login?to="
+    # Generate form id, based on host and port
+    form_id = Digest::SHA1.hexdigest("--" + host.to_s + "--" + port.to_s + "--")
+    # Generate SHA256 digest of Code Server Password
+    cookieValue = Digest::SHA256.hexdigest(password)
   else
     base_url  = "/rnode/#{host}/#{port}"
     full_url = "#{base_url}/auth-do-sign-in"

@@ -8,6 +8,7 @@ form:
   - app_type
   - jupyter_module
   - rstudio_module
+  - vscode_module
   - conda_env
   - extra_modules
   - slurm_task_per_nodes
@@ -25,9 +26,17 @@ attributes:
       - [
         'Jupyter','jupyter',
         data-hide-rstudio-module: true,
+        data-hide-vscode-module: true,
         ]
       - [
         'RStudio','rstudio',
+        data-hide-vscode-module: true,
+        data-hide-jupyter-module: true,
+        data-hide-conda-env: true,
+        ]
+      - [
+        'VSCode','vscode',
+        data-hide-rstudio-module: true,
         data-hide-jupyter-module: true,
         data-hide-conda-env: true,
         ]
@@ -44,6 +53,15 @@ attributes:
     options:
       - [ "R 4.2.1 (GCL)", "r/4.2.1"]
       - [ "R 4.2.2", "r/4.2.2"]
+
+  vscode_module:
+    widget: "select"
+    label: "Codeserver Version"
+    value: "4.11.0"
+    options:
+      - ["3.10.2", "3.10.2"]
+      - ["4.5.1", "4.5.1"]
+      - ["4.11.0", "4.11.0"]
       
   conda_env:
     label: "Path to Python virtual/conda environment"

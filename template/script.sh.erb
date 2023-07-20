@@ -107,6 +107,32 @@ singularity --version
 which jupyter
 jupyter lab --config="${CONFIG_FILE}" --no-browser "<%= working_dir.to_s %>"
 
+###### Launching VSCode  #######################################################
+elif [ <%= context.app_type %> = "vscode" ]; then
+
+CODE_SERVER_DATAROOT="$HOME/.local/share/code-server"
+mkdir -p "$CODE_SERVER_DATAROOT/extensions"
+export PASSWORD="$password"
+echo $PASSWORD
+
+# Loading modules.
+module load <%= context.extra_modules %>
+
+#
+# Start Code Server.
+#
+echo "$(date): Started code-server"
+echo ""
+
+/software/external/code-server/<%= context.vscode_module %>/bin/code-server \
+    --auth="password" \
+    --bind-addr="0.0.0.0:${port}" \
+    --disable-telemetry \
+    --extensions-dir="$CODE_SERVER_DATAROOT/extensions" \
+    --user-data-dir="$CODE_SERVER_DATAROOT" \
+    --log debug \
+    "<%= working_dir.to_s %>"
+
 ###### Launching Rstudio  ######################################################
 else
   
@@ -173,8 +199,6 @@ set -x
 
 # Launch the RStudio Server
 echo "Starting up rserver..."
-#module load anaconda3/2022.10
-#export LD_PRELOAD=/lib64/libuuid.so.1:$LD_PRELOAD
 
 ${RSPATH}/rserver \
   --www-port ${port} \

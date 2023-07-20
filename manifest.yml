@@ -4,5 +4,5 @@ category: Interactive Apps
 subcategory: Servers
 role: batch_connect
 description: |
-  This app will allow users to select and launch interactive application server for Jupyter or RStudio on one or more nodes 
+  This app will allow users to select and launch interactive application server for Jupyter, RStudio, and VSCode on one or more nodes 
   with more advanced Slurm resource request options.  

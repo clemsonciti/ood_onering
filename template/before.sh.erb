@@ -38,6 +38,11 @@ export show_tb="hidden"
 # find available port to run Tensorboard server on
 export tb_port=$(find_port ${host})
 
+elif [ <%= context.app_type %> = "vscode" ]; then 
+
+# Generate SHA1 encrypted password (requires OpenSSL installed)
+export password="$(create_passwd 16)"
+
 else
   
 # Define a password and export it for RStudio authentication
