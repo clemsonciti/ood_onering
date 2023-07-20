@@ -4,18 +4,17 @@
 
 # Find available port to run server on
 port=$(find_port)
+app_type=<%= context.app_type %>
+csrf_token=""
 
-# Generate SHA1 encrypted password (requires OpenSSL installed)
+if [ <%= context.app_type %> = "jupyter" ]; then 
+
 SALT="$(create_passwd 32)"
 export password="$(create_passwd 32)"
 PASSWORD_SHA1="$(echo -n "${password}${SALT}" | openssl dgst -sha1 | awk '{print $NF}')"
-
-# The `$CONFIG_FILE` environment variable is exported as it is used in the main
-# `script.sh.erb` file when launching the Jupyter Notebook server.
 export CONFIG_FILE="${PWD}/config.py"
 export JUPYTER_CONFIG_DIR="${PWD}"
-
-
+  
 # Generate Jupyter configuration file with secure file permissions
 (
 umask 077
@@ -36,6 +35,17 @@ EOL
 
 ### This is to setup Tensorboard WebProxyServer
 export show_tb="hidden"
-
 # find available port to run Tensorboard server on
 export tb_port=$(find_port ${host})
+
+else
+  
+# Define a password and export it for RStudio authentication
+password="$(create_passwd 16)"
+export RSTUDIO_PASSWORD="${password}"
+# create CSRF token
+csrf_token=<%= SecureRandom.uuid %>
+echo "CSRF TOKEN"
+echo $csrf_token
+
+fi

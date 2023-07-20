@@ -1,32 +1,40 @@
 <%-
-  # generate form id, based on host and port
-  form_tb = Digest::SHA1.hexdigest("--" + host.to_s + "--" + app_port.to_s + "--")
-  form_tf = Digest::SHA1.hexdigest("--" + host.to_s + "--" + port.to_s + "--")
-  test_location = Dir.pwd
-  #list_env = ENV.values
-  #list_env = ENV.keys
-  #file_location = ENV["HOME"]
-  #tb_info = File.read(ENV["HOME"] + "/.ood_tensorboard" + "." + host.to_s + "." + port.to_s).split
-  #spark_info = File.read(ENV["HOME"] + "/.ood_spark" + "." + host.to_s + "." + port.to_s).split
 
--%>
+  if app_type.to_s == "jupyter"
+    base_url  = "/node/#{host}/#{port}"
+    login_url = "#{base_url}/login"
+    next_url  = "#{base_url}/#{jupyter_api}"
+    full_url="#{login_url}?next=#{CGI.escape(next_url)}"
+    form_id = "jupyter_form#{login_url.gsub('/', '_')}"
+  else
+    base_url  = "/rnode/#{host}/#{port}"
+    full_url = "#{base_url}/auth-do-sign-in"
+    form_id = "rstudio_form#{full_url.gsub('/', '_')}"
+  end
+  
+%>
+
+<script type="text/javascript">
+(function () {
+  let date = new Date();
+  date.setTime(date.getTime() + (7*24*60*60*1000));
+  let expires = "expires=" + date.toUTCString();
+  let cookiePath = "path=/rnode/" + "<%= host.to_s %>" + "/" + "<%= port.to_s %>/";
+  /**
+    rstuido wants a cookie called csrf-token - but that's going to change in 2020!
+  */
+  let cookie = `csrf-token=<%= csrf_token %>;${expires};${cookiePath};SameSite=strict;secure`;
+  document.cookie = cookie;
+})();
+</script>
 
 
-<div>
-<div style="display:inline-block; width:45%;text-align:left;">    
-<form id="<%= form_tf %>" action="/node/<%= host %>/<%= port %>/login" method="post" target="_blank">
+<form id="<%= form_id %>" action="<%= full_url %>" method="post" target="_blank" >
+  <input type="hidden" name="csrf-token" value="<%= csrf_token %>"/>
+  <input type="hidden" name="username" value="<%= ENV["USER"] %>">
   <input type="hidden" name="password" value="<%= password %>">
+  <input type="hidden" name="staySignedIn" value="1">
   <button class="btn btn-primary" type="submit">
-    <i class="fa fa-eye"></i> Connect to Jupyter
+    <i class="fa fa-cogs"></i> Connect to <%= app_type %>
   </button>
 </form>
-</div>
-<div style="display:inline-block; width:45%;text-align:right;">
-<form id="<%= form_tb %>" action="/rnode/<%= host %>/<%= tb_port %>/auth" method="post" target="_blank" <%= show_tb %>>
-  <input type="hidden" name="password" value="<%= password %>">
-  <button class="btn btn-primary" type="submit">
-    <i class="fa fa-eye"></i> Connect to Tensorboard
-  </button>
-</form>
-</div>
-</div>

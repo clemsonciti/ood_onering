@@ -1,26 +1,50 @@
-
 # **MUST** set cluster id here that matches cluster configuration file located
 # under /etc/ood/config/clusters.d/*.yml
 
-cluster: "palmetto2"
+cluster:
+  - "palmetto2"
 
 form:
-  - modules
+  - app_type
+  - jupyter_module
+  - rstudio_module
   - conda_env
+  - extra_modules
   - slurm_task_per_nodes
   - slurm_mem
   - slurm_walltime
   - slurm_partition
   - working_dir
   - bc_email_on_started
+  
 attributes:
-  modules: 
+  app_type:
+    label: "Applications"
+    widget: "select"
+    options:
+      - [
+        'Jupyter','jupyter',
+        data-hide-rstudio-module: true,
+        ]
+      - [
+        'RStudio','rstudio',
+        data-hide-jupyter-module: true,
+        data-hide-conda-env: true,
+        ]
+      
+  jupyter_module: 
     label: "Anaconda Version"
     widget: "select"
-    required: true
-    value: "anaconda3/2022.10"
     options:
-      - ["anaconda3/2022.10","anaconda3/2022.10"]
+      - ['anaconda3/2022.10','anaconda3/2022.10']
+  
+  rstudio_module: 
+    label: "R Version"
+    widget: "select"
+    options:
+      - [ "R 4.2.1 (GCL)", "r/4.2.1"]
+      - [ "R 4.2.2", "r/4.2.2"]
+      
   conda_env:
     label: "Path to Python virtual/conda environment"
     value: ""
@@ -32,6 +56,15 @@ attributes:
       - Example conda: <b>source activate NAME_OF_ENVIRONMENT</b> <br>
       - Example venv: <b>source PATH_TO_VIRTUAL_ENVIRONMENT/bin/activate</b> <br>
       </small>
+
+  extra_modules: 
+    label: "List of modules to be loaded"
+    value: ""
+    help: |
+      <small> Provide a space-separated list of modules to be loaded. <br>
+      - For example: <b>openjdk/11.0.2-gcc/8.3.1 jags/4.3.0-gcc/8.3.1</b>
+      </small>
+      
   slurm_task_per_nodes:
     label: "CPU cores per chunk (ncpus)"
     value: "64"

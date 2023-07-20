@@ -1,8 +1,8 @@
 ---
-name: Jupyter Notebook (Slurm)
+name: Interactive Applications
 category: Interactive Apps
 subcategory: Servers
 role: batch_connect
 description: |
-  This app will launch a Jupyter Notebook server on one or more nodes with more advanced Slurm resource request options. 
-  Users can also specify virtual/conda environments to launch custom notebooks for Tensorflow and other advanced libraries. 
+  This app will allow users to select and launch interactive application server for Jupyter or RStudio on one or more nodes 
+  with more advanced Slurm resource request options.  

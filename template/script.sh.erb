@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+echo We are on node $(hostname)
+
 <%
 
 # Set our working directory.
@@ -19,35 +21,28 @@ end
 # Benchmark info
 echo "TIMING - Starting main script at: $(date)"
 
+
+###### Launching Jupyter notebook ##############################################
+if [ <%= context.app_type %> = "jupyter" ]; then 
+
 # Set working directory to home directory
 cd "${HOME}"
-
-#
-# Start Jupyter Notebook Server
-#
-
 module purge
-module load <%= context.modules %>
+module load <%= context.jupyter_module %>
 
 <%-
-  # Configure NGINX
   nginx_conf  = session.staged_root.join("nginx.conf")
   nginx_cache = session.staged_root.join("nginx")
   nginx_cmd   = <<-EOS.gsub(/^ {4}/, "")
-    singularity run -B "#{nginx_conf}:/usr/local/openresty/nginx/conf/nginx.conf" -B "#{nginx_cache}" /software/external/open-resty/alpine_resty.sif
+  singularity run -B "#{nginx_conf}:/usr/local/openresty/nginx/conf/nginx.conf" -B "#{nginx_cache}" /software/external/open-resty/alpine_resty.sif
   EOS
 -%>
-
 
 set -x
 module list
 # Load the environment (if specified)
 <%= context.conda_env %>
 
-
-#
-# Create NGINX configuration file
-#
 echo "Creating NGINX config..."
 (
 umask 077
@@ -105,20 +100,94 @@ sed 's/^ \{2\}//' > "<%= nginx_conf %>" << EOT
 EOT
 )
 
-
-# Benchmark info
 echo "TIMING - Starting jupyter at: $(date)"
-
 # Launch the Jupyter Notebook Server
-set -x
-
 singularity --version
 <%= nginx_cmd %>
-
 which jupyter
-
 jupyter lab --config="${CONFIG_FILE}" --no-browser "<%= working_dir.to_s %>"
 
+###### Launching Rstudio  ######################################################
+else
+  
+# Load the required environment
+setup_env () {
+  module purge
+  if [ <%= context.rstudio_module %> = "r/4.2.1" ]; then 
+    export MODULEPATH=/zfs/gcl/software/gbf/modulefiles:$MODULEPATH
+  fi
+  module load <%= context.rstudio_module %>
+  echo R version is <%= context.rstudio_module %>
+  RSPATH="/software/external/rstudio/2022.12.1-366/bin"
+  module load <%= context.extra_modules %>
+}
+setup_env
+
+export RSTUDIO_AUTH="${PWD}/rstudio/bin/auth"
+echo old TMPDIR $TMPDIR
+export TMPDIR=`mktemp -d`
+echo new TMPDIR $TMPDIR
+
+# Generate an `rsession` wrapper script
+export RSESSION_WRAPPER_FILE="${PWD}/rsession.sh"
+(
+umask 077
+sed 's/^ \{2\}//' > "${RSESSION_WRAPPER_FILE}" << EOL
+  #!/usr/bin/env bash
+  # Log all output from this script
+  export RSESSION_LOG_FILE="${RSTUDIO_SINGULARITY_HOST_MNT}${PWD}/rsession.log"
+  exec &>>"\${RSESSION_LOG_FILE}"
+  set -x
+  source /etc/profile.d/modules.sh
+  echo "============================================================="
+  module load <%= context.extra_modules %>
+  module list
+  export TMPDIR="${TMPDIR}"
+  export R_USER="$USER"
+  
+  # Launch the original command
+  echo "Launching rsession..."
+  exec ${RSPATH}/rsession --r-libs-user "${R_LIBS_USER}" "\${@}"
+EOL
+)
+
+chmod 700 "${RSESSION_WRAPPER_FILE}"
+# generate a temporary database.conf file
+export RSTUDIO_DB_CONF_FILE="${PWD}/database.conf"
+(
+umask 077
+sed 's/^ \{2\}//' > "${RSTUDIO_DB_CONF_FILE}" << EOL
+  # /etc/rstudio/database.conf
+  provider=sqlite
+  # Directory in which the sqlite database will be written
+  directory="${TMPDIR}"
+EOL
+)
+chmod 744 "${RSTUDIO_DB_CONF_FILE}"
+# Output debug info
+module list
+
+## fix rstudio active session error on start
+find ~/.rstudio/sessions/active/*/session-persistent-state -type f | xargs sed -i '' -e 's/abend="1"/abend="0"/'
+set -x
+
+# Launch the RStudio Server
+echo "Starting up rserver..."
+#module load anaconda3/2022.10
+#export LD_PRELOAD=/lib64/libuuid.so.1:$LD_PRELOAD
+
+${RSPATH}/rserver \
+  --www-port ${port} \
+  --auth-none 0 \
+  --auth-pam-helper-path "${RSTUDIO_AUTH}" \
+  --auth-encrypt-password 0 \
+  --rsession-path "${RSESSION_WRAPPER_FILE}" \
+  --server-data-dir "${TMPDIR}" \
+  --server-working-dir "${TMPDIR}" \
+  --server-user "${USER}" \
+  --database-config-file "${RSTUDIO_DB_CONF_FILE}"  
+
+fi
 
 
 
