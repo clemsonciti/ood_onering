@@ -1,0 +1,38 @@
+# Job submission configuration file
+#
+---
+
+#
+# Configure the content of the job script for the batch job here
+# @see http://www.rubydoc.info/gems/ood_core/OodCore/BatchConnect/Template
+#
+batch_connect:
+  # We use the basic web server template for generating the job script
+  #
+  # @note Do not change this unless you know what you are doing!
+  template: "basic"
+  conn_params:
+    - tb_port
+    - show_tb
+
+#
+# Configure the job script submission parameters for the batch job here
+# @see http://www.rubydoc.info/gems/ood_core/OodCore/Job/Script
+#
+#script:
+#  queue_name: "queue1"
+#  accounting_id: "account1"
+#  email_on_started: true
+#  native: # ... array of command line arguments ...
+#    
+
+script:
+  native:
+    - "--job-name"
+    - "jserver"
+    - "--partition=<%= slurm_partition %>"
+    - "--nodes=1"
+    - "--ntasks-per-node=<%= slurm_task_per_nodes %>"
+    - "--mem=<%= slurm_mem %>"
+    - "--time=<%= slurm_walltime %>"
+    

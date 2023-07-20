@@ -1,0 +1,72 @@
+
+# **MUST** set cluster id here that matches cluster configuration file located
+# under /etc/ood/config/clusters.d/*.yml
+
+cluster: "palmetto2"
+
+form:
+  - modules
+  - conda_env
+  - slurm_task_per_nodes
+  - slurm_mem
+  - slurm_walltime
+  - slurm_partition
+  - working_dir
+  - bc_email_on_started
+attributes:
+  modules: 
+    label: "Anaconda Version"
+    widget: "select"
+    required: true
+    value: "anaconda3/2022.10"
+    options:
+      - ["anaconda3/2022.10","anaconda3/2022.10"]
+  conda_env:
+    label: "Path to Python virtual/conda environment"
+    value: ""
+    help: |
+      <small> Provide an activation command to load the corresponding Python <br>
+      virtual (venv) or conda environment. You can replace NAME_OF_ENVIRONMENT <br>
+      with a corresponding conda environment, or PATH_TO_VIRTUAL_ENVIRONMENT <br>
+      with a specific path to your venv environment directory. <br>
+      - Example conda: <b>source activate NAME_OF_ENVIRONMENT</b> <br>
+      - Example venv: <b>source PATH_TO_VIRTUAL_ENVIRONMENT/bin/activate</b> <br>
+      </small>
+  slurm_task_per_nodes:
+    label: "CPU cores per chunk (ncpus)"
+    value: "64"
+    help: |
+      <small> - Typical Palmetto2 compute nodes have <b>64</b> cores.<br>
+      - <b>Users can request any number of cores that is smaller than the number of available cores.</b>
+      </small>
+  slurm_mem:
+    label: "Amount of memory per chunk (mem)"
+    value: "16G"
+    help: |
+      <small> - Typical Palmetto2 compute nodes have <b>250G</b> of memory.<br>
+      </small>
+  slurm_walltime:
+    label: "Walltime"
+    value: "00:30:00"
+    help: |
+      <small> - Walltime format is <b>hh:mm:ss</b>.<br>
+      </small>
+  slurm_partition:
+    label: "Partition"
+    required: true
+    help: |
+      <small>Partition to submit the job to</small>
+    widget: select
+    value: "work1"
+    options:
+      <%- CustomPartitions.queues.each do |g| %>
+      - ["<%= g %>","<%= g %>"]
+      <%- end %>
+  working_dir:
+    label: "Absolute path to working directory"
+    data-filepicker: true
+    data-target-file-type: dirs  # Valid values are: files, dirs, or both
+    readonly: false
+    help: "Select your project directory; defaults to $HOME"
+
+
